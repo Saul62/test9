@@ -477,7 +477,7 @@ def main():
                         max_display=10,
                         show=False
                     )
-                    st.success("✅ 瀑布图使用中文特征名显示")
+                    # st.success("✅ 瀑布图使用中文特征名显示")
                 except Exception as chinese_error:
                     st.warning("中文特征名显示失败，使用英文特征名")
                     # 如果中文失败，使用英文特征名

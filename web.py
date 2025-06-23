@@ -18,9 +18,49 @@ if not hasattr(np, 'bool'):
     np.bool = bool
 
 # 全局设置matplotlib字体，确保负号正常显示
-matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Liberation Sans', 'SimHei']
+def setup_chinese_font():
+    """设置中文字体"""
+    try:
+        import matplotlib.font_manager as fm
+
+        # 尝试多种中文字体
+        chinese_fonts = [
+            'WenQuanYi Zen Hei',  # 文泉驿正黑（Linux常用）
+            'WenQuanYi Micro Hei',  # 文泉驿微米黑
+            'SimHei',  # 黑体
+            'Microsoft YaHei',  # 微软雅黑
+            'PingFang SC',  # 苹果字体
+            'Hiragino Sans GB',  # 冬青黑体
+            'Noto Sans CJK SC',  # Google Noto字体
+            'Source Han Sans SC'  # 思源黑体
+        ]
+
+        # 获取系统可用字体
+        available_fonts = [f.name for f in fm.fontManager.ttflist]
+
+        # 查找可用的中文字体
+        for font in chinese_fonts:
+            if font in available_fonts:
+                matplotlib.rcParams['font.sans-serif'] = [font, 'DejaVu Sans', 'Arial']
+                matplotlib.rcParams['font.family'] = 'sans-serif'
+                print(f"使用中文字体: {font}")
+                return font
+
+        # 如果没有找到中文字体，使用默认字体
+        matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Liberation Sans']
+        matplotlib.rcParams['font.family'] = 'sans-serif'
+        print("未找到中文字体，使用默认字体")
+        return None
+
+    except Exception as e:
+        print(f"字体设置失败: {e}")
+        matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial']
+        matplotlib.rcParams['font.family'] = 'sans-serif'
+        return None
+
+# 设置字体和负号显示
+chinese_font = setup_chinese_font()
 matplotlib.rcParams['axes.unicode_minus'] = False
-matplotlib.rcParams['font.family'] = 'DejaVu Sans'
 
 # 设置页面标题和布局
 st.set_page_config(
@@ -367,8 +407,17 @@ def main():
 
                 # 尝试设置中文字体
                 try:
-                    # 尝试使用系统中文字体
-                    chinese_fonts = ['SimHei', 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'WenQuanYi Micro Hei']
+                    # 尝试使用系统中文字体（包含Linux云端服务器常用字体）
+                    chinese_fonts = [
+                        'WenQuanYi Zen Hei',  # 文泉驿正黑（Linux常用）
+                        'WenQuanYi Micro Hei',  # 文泉驿微米黑（Linux常用）
+                        'Noto Sans CJK SC',  # Google Noto字体
+                        'Source Han Sans SC',  # 思源黑体
+                        'SimHei',  # 黑体
+                        'Microsoft YaHei',  # 微软雅黑
+                        'PingFang SC',  # 苹果字体
+                        'Hiragino Sans GB'  # 冬青黑体
+                    ]
                     available_fonts = [f.name for f in fm.fontManager.ttflist]
 
                     chinese_font = None

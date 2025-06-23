@@ -443,17 +443,55 @@ def main():
 
                 fig_waterfall = plt.figure(figsize=(12, 8))
 
-                # 使用新版本的waterfall plot（跳过ID列）
-                shap.waterfall_plot(
-                    shap.Explanation(
-                        values=shap_value[1:],  # 跳过ID列的SHAP值
-                        base_values=expected_value,
-                        data=input_df.iloc[0, 1:].values,  # 跳过ID列的数据
-                        feature_names=[feature_dict.get(f, f) for f in feature_names_display]
-                    ),
-                    max_display=10,
-                    show=False
-                )
+                # 创建英文特征名（确保云端显示正常）
+                english_feature_map = {
+                    'Insemination': 'Treatment_Method', 'Complication': 'Complication',
+                    'Years': 'Infertility_Years', 'Type': 'Infertility_Type',
+                    'age': 'Female_Age', 'BMI': 'BMI', 'AMH': 'AMH', 'AFC': 'AFC',
+                    'FBG': 'Fasting_Glucose', 'TC': 'Total_Cholesterol', 'TG': 'Triglycerides',
+                    'HDL': 'HDL_Cholesterol', 'LDL': 'LDL_Cholesterol',
+                    'bFSH': 'Baseline_FSH', 'bLH': 'Baseline_LH', 'bPRL': 'Baseline_PRL',
+                    'bE2': 'Baseline_E2', 'bP': 'Baseline_P', 'bT': 'Baseline_T',
+                    'D3_FSH': 'Day3_FSH', 'D3_LH': 'Day3_LH', 'D3_E2': 'Day3_E2',
+                    'D5_FSH': 'Day5_FSH', 'D5_LH': 'Day5_LH', 'D5_E2': 'Day5_E2',
+                    'COS': 'Stimulation_Protocol', 'S_Dose': 'Starting_Dose',
+                    'T_Days': 'Treatment_Days', 'T_Dose': 'Total_Dose',
+                    'HCG_LH': 'HCG_Day_LH', 'HCG_E2': 'HCG_Day_E2', 'HCG_P': 'HCG_Day_P',
+                    'Ocytes': 'Retrieved_Oocytes', 'MII': 'MII_Rate', '2PN': 'Fertilization_Rate',
+                    'CR': 'Cleavage_Rate', 'GVE': 'Good_Embryo_Rate',
+                    'BFR': 'Blastocyst_Rate', 'Stage': 'Transfer_Stage',
+                    'Cycles': 'Transfer_Cycles'
+                }
+
+                english_names = [english_feature_map.get(f, f) for f in feature_names_display]
+
+                # 尝试使用中文特征名，如果失败则使用英文
+                try:
+                    # 首先尝试中文特征名
+                    shap.waterfall_plot(
+                        shap.Explanation(
+                            values=shap_value[1:],  # 跳过ID列的SHAP值
+                            base_values=expected_value,
+                            data=input_df.iloc[0, 1:].values,  # 跳过ID列的数据
+                            feature_names=[feature_dict.get(f, f) for f in feature_names_display]
+                        ),
+                        max_display=10,
+                        show=False
+                    )
+                    st.success("✅ 瀑布图使用中文特征名显示")
+                except Exception as chinese_error:
+                    st.warning("中文特征名显示失败，使用英文特征名")
+                    # 如果中文失败，使用英文特征名
+                    shap.waterfall_plot(
+                        shap.Explanation(
+                            values=shap_value[1:],
+                            base_values=expected_value,
+                            data=input_df.iloc[0, 1:].values,
+                            feature_names=english_names
+                        ),
+                        max_display=10,
+                        show=False
+                    )
 
                 # 手动设置中文字体和修复负号显示
                 for ax in fig_waterfall.get_axes():
@@ -486,6 +524,8 @@ def main():
                 plt.tight_layout()
                 st.pyplot(fig_waterfall)
                 plt.close(fig_waterfall)
+
+
             except Exception as e:
                 st.error(f"无法生成瀑布图: {str(e)}")
                 # 使用条形图作为替代（跳过ID列）

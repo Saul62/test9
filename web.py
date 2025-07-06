@@ -113,13 +113,13 @@ variable_descriptions = {
 @st.cache_resource
 def load_model():
     # 加载XGBoost模型
-    model = joblib.load('最佳模型/best_xgboost_model.pkl')
+    model = joblib.load('./best_xgboost_model.pkl')
 
     # 加载标准化器
-    scaler = joblib.load('数据/scaler.pkl')
+    scaler = joblib.load('./scaler.pkl')
 
     # 加载特征列名
-    with open('最佳模型/feature_columns.pkl', 'rb') as f:
+    with open('./feature_columns.pkl', 'rb') as f:
         feature_columns = pickle.load(f)
 
     return model, scaler, feature_columns
@@ -405,7 +405,7 @@ def main():
                         max_display=14,  # 显示所有14个特征
                         show=False
                     )
-                    st.success("✅ 瀑布图使用中文特征名显示")
+                    # st.success("✅ 瀑布图使用中文特征名显示")
                 except Exception as chinese_error:
                     st.warning("中文特征名显示失败，使用英文特征名")
                     # 如果中文失败，使用英文特征名

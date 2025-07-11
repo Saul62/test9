@@ -64,7 +64,7 @@ matplotlib.rcParams['axes.unicode_minus'] = False
 
 # 设置页面标题和布局
 st.set_page_config(
-    page_title="多囊卵巢综合征患者辅助生殖累积活产率预测系统",
+    page_title="接受辅助生殖治疗的多囊卵巢综合征患者累积活产率预测系统V1.0",
     page_icon="🏥",
     layout="wide"
 )
@@ -76,22 +76,22 @@ plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 # 定义全局变量
 global feature_names, feature_dict, variable_descriptions
 
-# 特征名称（只使用14个指定变量）
+# 特征名称（使用15个指定变量）
 feature_names_display = [
     'age', 'LDL', 'bPRL', 'bE2', 'AMH', 'S_Dose', 'T_Dose',
-    'D5_FSH', 'D5_LH', 'HCG_E2', 'HCG_LH', 'Ocytes', 'BFR', 'Cycles'
+    'D5_FSH', 'D5_LH', 'D5_E2', 'HCG_E2', 'HCG_LH', 'Ocytes', 'BFR', 'Cycles'
 ]
 
 # 中文特征名称
 feature_names_cn = [
     '女方年龄', '低密度脂蛋白胆固醇', '基线泌乳素', '基线雌二醇', '抗缪勒氏激素',
-    '促性腺激素起始剂量', '促性腺激素总剂量', '促排第5天FSH', '促排第5天LH',
+    '促性腺激素起始剂量', '促性腺激素总剂量', '促排第5天FSH', '促排第5天LH', '促排第5天雌二醇',
     'HCG日雌二醇', 'HCG日促黄体生成素', '获卵数', '囊胚形成率', '移植总周期数'
 ]
 
 feature_dict = dict(zip(feature_names_display, feature_names_cn))
 
-# 变量说明字典（只包含14个指定变量）
+# 变量说明字典（包含15个指定变量）
 variable_descriptions = {
     'age': '女方年龄（岁）',
     'LDL': '低密度脂蛋白胆固醇（mmol/L）',
@@ -102,6 +102,7 @@ variable_descriptions = {
     'T_Dose': '促性腺激素总剂量（IU）',
     'D5_FSH': '促排第5天促卵泡刺激素（mIU/mL）',
     'D5_LH': '促排第5天促黄体生成素（mIU/mL）',
+    'D5_E2': '促排第5天雌二醇（pg/mL）',
     'HCG_E2': 'HCG日雌二醇（pg/mL）',
     'HCG_LH': 'HCG日促黄体生成素（mIU/mL）',
     'Ocytes': '获卵数（个）',
@@ -129,7 +130,7 @@ def main():
     global feature_names, feature_dict, variable_descriptions
 
     # 侧边栏标题
-    st.sidebar.title("多囊卵巢综合征患者辅助生殖累积活产率预测系统V1.0")
+    st.sidebar.title("接受辅助生殖治疗的多囊卵巢综合征患者累积活产率预测系统V1.0")
     st.sidebar.image("https://img.freepik.com/free-vector/hospital-logo-design-vector-medical-cross_53876-136743.jpg", width=200)
 
     # 添加系统说明到侧边栏
@@ -163,7 +164,7 @@ def main():
             st.markdown(f"**{feature_dict[feature]}**: {variable_descriptions[feature]}")
 
     # 主页面标题
-    st.title("多囊卵巢综合征患者辅助生殖累积活产率预测系统V1.0")
+    st.title("接受辅助生殖治疗的多囊卵巢综合征患者累积活产率预测系统V1.0")
     st.markdown("### 基于XGBoost算法的累积活产率评估")
 
     # 加载模型
@@ -176,7 +177,7 @@ def main():
     
     # 创建输入表单
     st.header("患者信息输入")
-    st.markdown("### 请填写以下14个关键指标")
+    # st.markdown("### 请填写以下15个关键指标")
 
     # 创建标签页来组织输入
     tab1, tab2, tab3, tab4 = st.tabs(["病人基线信息", "促排过程监测", "触发排卵指标", "胚胎检测与移植"])
@@ -201,10 +202,11 @@ def main():
         with col1:
             s_dose = st.number_input("促性腺激素起始剂量（IU）", min_value=75, max_value=450, value=225)
             t_dose = st.number_input("促性腺激素总剂量（IU）", min_value=500, max_value=5000, value=2250)
+            d5_fsh = st.number_input("促排第5天促卵泡刺激素（mIU/mL）", min_value=1.0, max_value=50.0, value=8.0, step=0.1)
 
         with col2:
-            d5_fsh = st.number_input("促排第5天促卵泡刺激素（mIU/mL）", min_value=1.0, max_value=50.0, value=8.0, step=0.1)
             d5_lh = st.number_input("促排第5天促黄体生成素（mIU/mL）", min_value=0.5, max_value=30.0, value=3.0, step=0.1)
+            d5_e2 = st.number_input("促排第5天雌二醇（pg/mL）", min_value=50.0, max_value=2000.0, value=200.0, step=10.0)
     
     with tab3:
         st.subheader("触发排卵指标")
@@ -231,18 +233,18 @@ def main():
     predict_button = st.button("预测累积活产率", type="primary")
 
     if predict_button:
-        # 收集14个输入特征
+        # 收集15个输入特征
         features = [
             age, ldl, bprl, be2, amh, s_dose, t_dose,
-            d5_fsh, d5_lh, hcg_e2, hcg_lh, ocytes, bfr, cycles
+            d5_fsh, d5_lh, d5_e2, hcg_e2, hcg_lh, ocytes, bfr, cycles
         ]
 
-        # 转换为DataFrame（只包含14个特征列）
+        # 转换为DataFrame（包含15个特征列）
         input_df = pd.DataFrame([features], columns=feature_columns)
 
-        # 标准化连续变量（所有14个变量都是连续变量）
+        # 标准化连续变量（所有15个变量都是连续变量）
         continuous_vars = ['age', 'LDL', 'bPRL', 'bE2', 'AMH', 'S_Dose', 'T_Dose',
-                          'D5_FSH', 'D5_LH', 'HCG_E2', 'HCG_LH', 'Ocytes', 'BFR', 'Cycles']
+                          'D5_FSH', 'D5_LH', 'D5_E2', 'HCG_E2', 'HCG_LH', 'Ocytes', 'BFR', 'Cycles']
 
         # 创建输入数据的副本用于标准化
         input_scaled = input_df.copy()
@@ -402,7 +404,7 @@ def main():
                             data=input_df.iloc[0].values,  # 现在没有ID列了
                             feature_names=[feature_dict.get(f, f) for f in feature_names_display]
                         ),
-                        max_display=14,  # 显示所有14个特征
+                        max_display=15,  # 显示所有15个特征
                         show=False
                     )
                     # st.success("✅ 瀑布图使用中文特征名显示")
@@ -416,7 +418,7 @@ def main():
                             data=input_df.iloc[0].values,
                             feature_names=english_names
                         ),
-                        max_display=14,
+                        max_display=15,
                         show=False
                     )
 
@@ -479,7 +481,7 @@ def main():
 
                 plt.rcParams['axes.unicode_minus'] = False
 
-                sorted_idx = np.argsort(np.abs(shap_value))[-14:]  # 显示所有14个特征
+                sorted_idx = np.argsort(np.abs(shap_value))[-15:]  # 显示所有15个特征
 
                 bars = plt.barh(range(len(sorted_idx)), shap_value[sorted_idx])
 
